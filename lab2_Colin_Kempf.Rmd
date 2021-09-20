@@ -1,0 +1,102 @@
+---
+title: "Lab 2"
+author: "Colin Kempf"
+date: "9/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(classdata)
+library(tidyverse)
+data(choco)
+str(choco)
+
+CocaPercentnum <- as.numeric(choco$CocoaPercent)
+hist(CocaPercentnum)
+boxplot(choco$CocoaPercent)
+```
+
+Based on the graphs it looks like most of the chocolates stick to around 65 - 70 percent Cocoa. This can be seen in both of the graphs. There are some large outliers with some chocolates going from close to 40 percent, and others close to 100 percent Cocoa.  
+
+```{r}
+counts <- table(choco$CountryBeanOrigin)
+length(counts)
+counts <- sort(counts, decreasing=TRUE)
+counts <- head(counts, 10)
+barplot(counts, las=2, cex.names=0.6)
+```
+
+Just looking at the 10 of the locations (in part to keep the graph simple), we can see a wide range in rating based on the location of the beans origin. Looking at this graph, Colombia has a pretty low overall rating, especially when compared to Venezuela which is around 4 times as large. 
+
+```{r}
+plot(choco$CocoaPercent, choco$Raiting)
+boxplot(choco$Rating)
+choco$group <- ifelse(choco$CocoaPercent > 70, 'high', 'low')
+boxplot(choco$Rating ~ choco$group)
+cor(choco$CocoaPercent, choco$Rating)
+summary(choco$CocoaPercent)
+summary(choco$Rating)
+```
+
+By separating the high and low regions of a box plot, we can get a more clear picture of what the Cocoa percentage does to the ratings. A high Coca percentage has slightly lower average rating that the lower Cocoa percentage has. If we look at the correlation we can see that there is a negative relationship between the rating and the Cocoa percentage. 
+
+```{r}
+rating <- table(choco$Rating)
+summary(as.numeric(rating))
+boxplot(rating)
+rating_filtered <- rating[rating < 25]
+country_filtered <- table(choco$CountryBeanOrigin) %>% 
+  sort(decreasing = TRUE) %>%
+  head(100)
+choco %>% 
+  filter(Rating %in% names(rating_filtered)) %>% 
+  filter(CountryBeanOrigin %in% names(country_filtered)) %>% 
+  ggplot() +
+  geom_bar(aes(y = CountryBeanOrigin, fill = Rating), position = 'fill') 
+  
+```
+
+We can look at the ratings of locations to determine if the beans from some places are better than others. Based on the selection of the data we give the code, we can compare different places based on how high they scored against others. The grey locations are off the scale entirely. From this, we can assume that their flavor was not as appealing, or that other locations produce better tasting flavors. On the other hand, we can tell that the lighter blue locations are much better.
+
+```{r}
+#Compare textures and rating
+flavor <- table(choco$Characteristics1)
+summary(as.numeric(flavor))
+boxplot(flavor)
+flavor_filtered <- flavor[flavor > 50]
+length(choco$Rating)
+rating_filtered <- table(choco$Rating) %>%
+  head(2452)
+choco %>% 
+  filter(Characteristics1 %in% names(flavor_filtered)) %>% 
+  filter(Rating %in% names(rating_filtered)) %>%
+  ggplot() +
+  geom_bar(aes(x = Rating, fill = Characteristics1), position = 'fill') + 
+  coord_flip()
+```
+
+This information compares some of the characteristics of the chocolate to the rating of the chocolate to see if there is any correlation. While it doesn't measure every characteristic (mainly to make the tables look clearer), we can tell that creamy chocolate is ranked much higher than others, reciving the most 4s from the group. However it also recieved half of the 1.5s. Others like sticky never score very high, but find their place with the lower ranks. 
+
+```{r}
+#Compare company and rating
+company <- table(choco$Company)
+summary(as.numeric(company))
+boxplot(company)
+company_filtered <- company[company > 20]
+#choco_filtered <- filter(choco, Characteristics1 %in% names(flavor_filtered))
+length(choco$Rating)
+rating_filtered <- table(choco$Rating) %>%
+  head(2452)
+choco %>% 
+  filter(Company %in% names(company_filtered)) %>% 
+  filter(Rating %in% names(rating_filtered)) %>%
+  ggplot() +
+  geom_bar(aes(x = Rating, fill = Company), position = 'fill') + 
+  coord_flip()
+```
+
+This table is similar to the last one, but instead of characteristics, we are comparing the companies that produce the chocolate, to look for correlation between that and their ratings. From the select data we have given the table, the correlation is appearing to have a smaller effect. While there are some outliers, like Pralus being the only of these companies to recieve a 2, overall there aren't any major standout companies.  
